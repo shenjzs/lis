@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lights Out 7x7</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #2c3e50;
+            color: white;
+            margin-top: 50px;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            color: #bdc3c7;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(7, 50px);
+            grid-gap: 5px;
+            margin-bottom: 25px;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: #34495e;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .cell.on {
+            background-color: #f1c40f;
+            box-shadow: 0 0 12px #f1c40f;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Lights Out 7x7</h1>
+    <p>Kliknij pole, aby zmienić stan jego i jego sąsiadów. Zgaś wszystkie światła!</p>
+    
+    <div id="grid"></div>
+    <button onclick="initGame()">Losuj nową grę</button>
+
+    <script>
+        const size = 7;
+        const gridElement = document.getElementById('grid');
+        let state = [];
+
+        function initGame() {
+            gridElement.innerHTML = '';
+            // Tworzenie pustej tablicy 7x7 (wszystko zgaszone)
+            state = Array(size).fill().map(() => Array(size).fill(false));
+
+            // Budowanie siatki w HTML
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.onclick = () => handleCellClick(r, c);
+                    gridElement.appendChild(cell);
+                }
+            }
+
+            // Mieszanie planszy symulowanymi kliknięciami, 
+            // aby mieć pewność, że układ jest zawsze możliwy do rozwiązania
+            for (let i = 0; i < 40; i++) {
+                const randomRow = Math.floor(Math.random() * size);
+                const randomCol = Math.floor(Math.random() * size);
+                toggle(randomRow, randomCol);
+            }
+            updateView();
+        }
+
+        function handleCellClick(r, c) {
+            toggle(r, c);
+            updateView();
+            checkWin();
+        }
+
+        function toggle(r, c) {
+            // [r, c] to środek, reszta to góra, dół, lewo, prawo
+            const directions = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+            
+            for (let [dr, dc] of directions) {
+                const nr = r + dr;
+                const nc = c + dc;
+                // Sprawdzamy czy pole nie wychodzi poza planszę
+                if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                    state[nr][nc] = !state[nr][nc];
+                }
+            }
+        }
+
+        function updateView() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+                if (state[r][c]) {
+                    cell.classList.add('on');
+                } else {
+                    cell.classList.remove('on');
+                }
+            });
+        }
+
+        function checkWin() {
+            // Sprawdza, czy w tablicy zostało jakiekolwiek zapalone światło (true)
+            const hasOn = state.some(row => row.some(cellValue => cellValue === true));
+            if (!hasOn) {
+                // Opóźnienie alertu, aby kolor ostatniego klikniętego kafelka zdążył się zaktualizować
+                setTimeout(() => {
+                    alert("Gratulacje! Wszystkie światła zostały zgaszone!");
+                }, 50);
+            }
+        }
+
+        // Uruchomienie gry po załadowaniu skryptu
+        initGame();
+    </script>
+</body>
+</html>
